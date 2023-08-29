@@ -58,7 +58,7 @@ if (isset($_SESSION['username'])) {
 
 
 
-                    <ul class="list-group mvh-50 overflow-auto">
+                    <ul class="list-group mvh-50 overflow-auto" id="chatList">
                         <?php if (!empty($conversations)) {
                             foreach ($conversations as $conversation) { ?>
                                 <li class="list-group-item">
@@ -91,11 +91,37 @@ if (isset($_SESSION['username'])) {
 
         <script>
             $(document).ready(function() {
-                //Search action perform when change on text box
+                // When the input with id "searchText" detects an input event (typing), execute the following function
                 $("#searchText").on("input", function() {
-                    let searchText = $(this).val();
-                    console.log(searchText);
-                })
+                    // Get the value of the input field with id "searchText"
+                    var searchText = $(this).val();
+                    if(searchText == "")return;
+
+                    // Make an AJAX POST request to the 'search.php' file located in the '
+                    //app/ajax' directory
+                    // Send the 'searchText' value as a parameter named 'key'
+                    $.post('app/ajax/search.php', {
+                        key: searchText
+                    }, function(data, status) {
+                        // This function will execute when the POST request is successful
+                        // It receives 'data' (the response from the server) and 'status'
+
+                        // Replace the content of the element with id "chatList"
+                        //with the 'data' received from the server
+                        $("#chatList").html(data);
+                    });
+                });
+
+                // Search using the button
+                $("#searchBtn").on("click", function() {
+                    var searchText = $("#searchText").val();
+                    if(searchText == "")return;
+                    $.post('app/ajax/search.php', {
+                        key: searchText
+                    }, function(data, status) {
+                        $("#chatList").html(data);
+                    })
+                });
 
 
 
