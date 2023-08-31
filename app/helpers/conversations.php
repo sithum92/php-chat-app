@@ -1,22 +1,54 @@
 <?php
 
+
 function getConversations($user_id, $conn)
 {
-
-    $sql = "SELECT c.conversation_id, u.name, u.username, u.p_p, u.last_seen
-    FROM conversations c
-    JOIN users u ON (c.user_1 = u.user_id OR c.user_2 = u.user_id)
-    WHERE c.user_1 = ? OR c.user_2 = ?
-    ORDER BY c.conversation_id DESC";
+    /**
+      Getting all the conversations
+      for current (logged in) user
+    **/
+    $sql = "SELECT * FROM conversations
+            WHERE user_1=? OR user_2=?
+            ORDER BY conversation_id DESC";
 
     $stmt = $conn->prepare($sql);
     $stmt->execute([$user_id, $user_id]);
 
-    if ($stmt->rowCount() > 0) {
-        $conversations = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        return $conversations;
+    if($stmt->rowCount() > 0) {
+        $conversations = $stmt->fetchAll();
+
+        /**
+          creating empty array to
+          store the user conversation
+        **/
+        $user_data = [];
+
+        # looping through the conversations
+        foreach($conversations as $conversation) {
+            # if conversations user_1 row equal to user_id
+            if ($conversation['user_1'] == $user_id) {
+                $sql2  = "SELECT *
+            	          FROM users WHERE user_id=?";
+                $stmt2 = $conn->prepare($sql2);
+                $stmt2->execute([$conversation['user_2']]);
+            } else {
+                $sql2  = "SELECT *
+            	          FROM users WHERE user_id=?";
+                $stmt2 = $conn->prepare($sql2);
+                $stmt2->execute([$conversation['user_1']]);
+            }
+
+            $allConversations = $stmt2->fetchAll();
+
+            # pushing the data into the array
+            array_push($user_data, $allConversations[0]);
+        }
+
+        return $user_data;
+
     } else {
-        return [];
+        $conversations = [];
+        return $conversations;
     }
 
 }
